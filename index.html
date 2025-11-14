@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fulltrack - Reportes</title>
+    <!-- Cargar Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilo para la barra de scroll (webkit) */
+        ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* cool-gray-300 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* cool-gray-400 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- Encabezado principal -->
+    <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 shadow-md">
+        <h1 class="text-3xl font-bold">Fulltrack - Reportes</h1>
+        <p class="text-blue-100 mt-1">Sistema de consolidación de consumo de diesel de GRUPO AMALGAMA</p>
+    </header>
+
+    <main class="p-4 md:p-8 max-w-7xl mx-auto">
+        
+        <!-- Contenedor de Pestañas -->
+        <div>
+            <!-- Navegación de Pestañas -->
+            <div class="border-b border-gray-300">
+                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                    <button id="tab-report" onclick="switchTab('report')" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-blue-600 border-blue-600">
+                        Reporte de Diesel
+                    </button>
+                    <button id="tab-upload" onclick="switchTab('upload')" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">
+                        Carga de Archivos
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Panel de Reporte (Activo por defecto) -->
+            <div id="panel-report" class="mt-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">Reporte de Viajes Cargados</h2>
+                    <p id="report-count" class="text-sm text-gray-600 mb-4">Cargando reportes...</p>
+                    
+                    <!-- Contenedor de la tabla con scroll horizontal -->
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-orange-100">
+                                <tr>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">ID</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Número de Unidad</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Fecha</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Hora</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">KM Recorrido</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Distancia conducida</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Distancia en top gear</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Distancia en cambio bajo</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Combustible del viaje</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Combustible manejando</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Combustible en ralentí</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">DEF usado</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Tiempo del viaje</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Tiempo manejando</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Tiempo en ralentí</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Tiempo en top gear</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Tiempo en crucero</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Tiempo en exceso de velocidad</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Velocidad máxima</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">RPM máxima</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Velocidad promedio</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Rendimiento del viaje</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Rendimiento manejando</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Factor de carga</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Eventos de exceso de velocidad</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Eventos de frenado</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Tiempo en neutro/coasting</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Tiempo en PTO</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Combustible PTO</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Archivo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody" class="divide-y divide-gray-200 bg-white">
+                                <!-- Fila de carga -->
+                                <tr>
+                                    <td colspan="30" class="text-center p-6 text-gray-500">
+                                        Cargando datos...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Carga (Oculto por defecto) -->
+            <div id="panel-upload" class="hidden mt-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg mx-auto">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Cargar Nuevo Reporte</h2>
+                    
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label for="file-upload" class="block text-sm font-medium text-gray-700 mb-2">Seleccionar archivo XML:</label>
+                            <input id="file-upload" name="xmlFile" type="file" accept=".xml" class="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-lg file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-blue-50 file:text-blue-700
+                                hover:file:bg-blue-100
+                                cursor-pointer" required>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                            Subir y Procesar Archivo
+                        </button>
+                    </form>
+
+                    <!-- Área de Mensajes y Progreso -->
+                    <div id="upload-status" class="mt-4 text-center">
+                        <!-- Mensajes de éxito o error aparecerán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- LÓGICA DE PESTAÑAS ---
+        const tabButtons = {
+            report: document.getElementById('tab-report'),
+            upload: document.getElementById('tab-upload')
+        };
+        const tabPanels = {
+            report: document.getElementById('panel-report'),
+            upload: document.getElementById('panel-upload')
+        };
+
+        function switchTab(tabId) {
+            // Ocultar todos los paneles
+            Object.values(tabPanels).forEach(panel => panel.classList.add('hidden'));
+            
+            // Desactivar todos los botones
+            Object.values(tabButtons).forEach(button => {
+                button.classList.remove('text-blue-600', 'border-blue-600');
+                button.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+            });
+
+            // Activar el botón y panel seleccionados
+            tabPanels[tabId].classList.remove('hidden');
+            tabButtons[tabId].classList.add('text-blue-600', 'border-blue-600');
+            tabButtons[tabId].classList.remove('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+        }
+
+        // --- LÓGICA DE CARGA DE DATOS ---
+
+        const tableBody = document.getElementById('reportTableBody');
+        const reportCountEl = document.getElementById('report-count');
+
+        // Función para añadir una fila a la tabla de reportes
+        function addReportRow(report) {
+            const row = tableBody.insertRow();
+            row.className = 'hover:bg-gray-50';
+            
+            // Mapeo de columnas en el orden exacto de la tabla
+            const columns = [
+                report.id,
+                report.unit_number,
+                report.report_date, // Columna de fecha
+                report.report_time, // Columna de hora
+                report.km_recorrido,
+                report.distancia_conducida,
+                report.distancia_top_gear,
+                report.distancia_cambio_bajo,
+                report.combustible_viaje,
+                report.combustible_manejando,
+                report.combustible_ralenti,
+                report.def_usado,
+                report.tiempo_viaje,
+                report.tiempo_manejando,
+                report.tiempo_ralenti,
+                report.tiempo_top_gear,
+                report.tiempo_crucero,
+                report.tiempo_exceso_velocidad,
+                report.velocidad_maxima,
+                report.rpm_maxima,
+                report.velocidad_promedio,
+                report.rendimiento_viaje,
+                report.rendimiento_manejando,
+                report.factor_carga,
+                report.eventos_exceso_velocidad,
+                report.eventos_frenado,
+                report.tiempo_neutro_coasting,
+                report.tiempo_pto,
+                report.combustible_pto,
+                report.file_name
+            ];
+
+            columns.forEach((text, index) => {
+                const cell = row.insertCell();
+                let value = text || 'N/D';
+                
+                // Formateo especial para Factor de Carga
+                // El índice 23 corresponde a 'factor_carga' en el array 'columns'
+                if (index === 23 && value !== 'N/D' && !isNaN(parseFloat(value))) { 
+                    value = `${value}%`;
+                }
+                
+                cell.textContent = value;
+                cell.className = 'px-4 py-3 whitespace-nowrap text-gray-700';
+            });
+        }
+
+        // Función para cargar los reportes desde la BD
+        async function fetchReports() {
+            try {
+                // Añadir un parámetro 'cache buster' para evitar la caché del navegador
+                const response = await fetch(`fetch_reports.php?t=${new Date().getTime()}`);
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor.');
+                }
+                const reports = await response.json();
+
+                // Limpiar tabla
+                tableBody.innerHTML = ''; 
+
+                if (reports.length > 0) {
+                    reports.forEach(addReportRow);
+                    reportCountEl.textContent = `Mostrando ${reports.length} reportes.`;
+                } else {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="30" class="text-center p-6 text-gray-500">
+                                No hay reportes cargados. Comience subiendo un archivo.
+                            </td>
+                        </tr>
+                    `;
+                    reportCountEl.textContent = 'Mostrando 0 reportes.';
+                }
+            } catch (error) {
+                console.error('Error al cargar reportes:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="30" class="text-center p-6 text-red-500">
+                            Error al cargar los reportes. Revise la conexión y el archivo 'fetch_reports.php'.
+                        </td>
+                    </tr>
+                `;
+                reportCountEl.textContent = 'Error al cargar reportes.';
+            }
+        }
+
+        // --- LÓGICA DE SUBIDA DE ARCHIVOS ---
+
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadStatus = document.getElementById('upload-status');
+        const fileInput = document.getElementById('file-upload');
+
+        uploadForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            if (!fileInput.files.length) {
+                showStatus('Por favor, seleccione un archivo.', 'error');
+                return;
+            }
+
+            const submitButton = uploadForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Procesando...';
+            showStatus('Procesando archivo...', 'loading');
+
+            try {
+                const response = await fetch('upload.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showStatus(result.message, 'success');
+                    fileInput.value = ''; // Limpiar el input
+                    // Recargar los reportes y cambiar a la pestaña de reporte
+                    await fetchReports();
+                    switchTab('report');
+                } else {
+                    showStatus(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error al subir:', error);
+                showStatus('Error de conexión al subir el archivo.', 'error');
+            } finally {
+                // Reactivar el botón
+                submitButton.disabled = false;
+                submitButton.textContent = 'Subir y Procesar Archivo';
+            }
+        });
+
+        // Función para mostrar mensajes de estado
+        function showStatus(message, type = 'loading') {
+            uploadStatus.innerHTML = '';
+            const p = document.createElement('p');
+            p.textContent = message;
+
+            if (type === 'success') {
+                p.className = 'text-green-600';
+            } else if (type === 'error') {
+                p.className = 'text-red-600';
+            } else {
+                p.className = 'text-blue-600';
+            }
+            uploadStatus.appendChild(p);
+        }
+
+        // Carga inicial de datos
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchReports();
+        });
+    </script>
+
+</body>
+</html>
