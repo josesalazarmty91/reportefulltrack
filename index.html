@@ -33,15 +33,22 @@
         <p class="text-blue-100 mt-1">Sistema de consolidación de consumo de diesel de GRUPO AMALGAMA</p>
     </header>
 
-    <main class="p-4 md:p-8 max-w-7xl mx-auto">
+    <!-- 
+      CAMBIO: Clases 'max-w-7xl' y 'mx-auto' quitadas para que ocupe todo el ancho.
+    -->
+    <main class="p-4 md:p-8">
         
         <!-- Contenedor de Pestañas -->
         <div>
-            <!-- Navegación de Pestañas -->
+            <!-- Navegación de Pestañas (MODIFICADA) -->
             <div class="border-b border-gray-300">
                 <nav class="-mb-px flex space-x-6" aria-label="Tabs">
                     <button id="tab-report" onclick="switchTab('report')" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-blue-600 border-blue-600">
                         Reporte de Diesel
+                    </button>
+                    <!-- NUEVA PESTAÑA -->
+                    <button id="tab-tablet" onclick="switchTab('tablet')" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">
+                        Reporte Tableta
                     </button>
                     <button id="tab-upload" onclick="switchTab('upload')" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">
                         Carga de Archivos
@@ -55,6 +62,20 @@
                     <h2 class="text-2xl font-semibold text-gray-800 mb-2">Reporte de Viajes Cargados</h2>
                     <p id="report-count" class="text-sm text-gray-600 mb-4">Cargando reportes...</p>
                     
+                    <!-- KPIs -->
+                    <div class="flex flex-wrap gap-4 mb-4">
+                        <!-- KPI 1: Total KM -->
+                        <div class="bg-gray-50 p-3 rounded-lg text-center shadow-sm border border-gray-200">
+                            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">KM Totales</h4>
+                            <p id="kpi-total-km" class="text-xl font-bold text-blue-700">0</p>
+                        </div>
+                        <!-- KPI 2: Total Combustible -->
+                        <div class="bg-gray-50 p-3 rounded-lg text-center shadow-sm border border-gray-200">
+                            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Combustible Total</h4>
+                            <p id="kpi-total-fuel" class="text-xl font-bold text-blue-700">0 L</p>
+                        </div>
+                    </div>
+
                     <!-- Contenedor de la tabla con scroll horizontal -->
                     <div class="overflow-x-auto rounded-lg border border-gray-200">
                         <table class="min-w-full divide-y divide-gray-200 text-sm">
@@ -64,11 +85,14 @@
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Número de Unidad</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Fecha</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Hora</th>
-                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">KM Recorrido</th>
+                                    
+                                    <!-- COLUMNAS AGRUPADAS Y CON FONDO -->
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-200">KM Recorrido</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-200">Combustible del viaje</th>
+                                    
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Distancia conducida</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Distancia en top gear</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Distancia en cambio bajo</th>
-                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Combustible del viaje</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Combustible manejando</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Combustible en ralentí</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">DEF usado</th>
@@ -105,8 +129,52 @@
                 </div>
             </div>
 
+            <!-- NUEVO PANEL DE TABLETA (Títulos actualizados) -->
+            <div id="panel-tablet" class="hidden mt-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">Reporte de Carga (Tableta)</h2>
+                    <p id="tablet-report-count" class="text-sm text-gray-600 mb-4">Cargando reportes de tableta...</p>
+                    
+                    <!-- Contenedor de la tabla con scroll horizontal -->
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-blue-100"> <!-- Cabecera con otro color -->
+                                <tr>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">ID</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Compañía</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Unidad</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Operador</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Bitácora</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Hubodómetro</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">KM Inicio</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">KM Fin</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">KM Recorridos</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Litros Diesel</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Litros Auto</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Litros Urea</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Sellos</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Totalizador</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Ruta Foto</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Timestamp</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Ruta Foto (2)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabletTableBody" class="divide-y divide-gray-200 bg-white">
+                                <!-- Fila de carga -->
+                                <tr>
+                                    <td colspan="17" class="text-center p-6 text-gray-500">
+                                        Cargando datos...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Panel de Carga (Oculto por defecto) -->
             <div id="panel-upload" class="hidden mt-6">
+                <!-- ... (contenido existente del panel de carga) ... -->
                 <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg mx-auto">
                     <h2 class="text-2xl font-semibold text-gray-800 mb-4">Cargar Nuevo Reporte</h2>
                     
@@ -137,13 +205,15 @@
     </main>
 
     <script>
-        // --- LÓGICA DE PESTAÑAS ---
+        // --- LÓGICA DE PESTAÑAS (MODIFICADA) ---
         const tabButtons = {
             report: document.getElementById('tab-report'),
+            tablet: document.getElementById('tab-tablet'), // NUEVO
             upload: document.getElementById('tab-upload')
         };
         const tabPanels = {
             report: document.getElementById('panel-report'),
+            tablet: document.getElementById('panel-tablet'), // NUEVO
             upload: document.getElementById('panel-upload')
         };
 
@@ -163,10 +233,14 @@
             tabButtons[tabId].classList.remove('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
         }
 
-        // --- LÓGICA DE CARGA DE DATOS ---
+        // --- LÓGICA DE CARGA DE DATOS (REPORTE DIESEL) ---
 
         const tableBody = document.getElementById('reportTableBody');
         const reportCountEl = document.getElementById('report-count');
+        
+        // Elementos de KPI
+        const kpiTotalKm = document.getElementById('kpi-total-km');
+        const kpiTotalFuel = document.getElementById('kpi-total-fuel');
 
         // Función para añadir una fila a la tabla de reportes
         function addReportRow(report) {
@@ -179,11 +253,12 @@
                 report.unit_number,
                 report.report_date, // Columna de fecha
                 report.report_time, // Columna de hora
-                report.km_recorrido,
+                report.km_recorrido, // Columna 4
+                report.combustible_viaje, // Columna 5 (MOVIDA)
                 report.distancia_conducida,
                 report.distancia_top_gear,
                 report.distancia_cambio_bajo,
-                report.combustible_viaje,
+                // report.combustible_viaje, // (Quitada de su posición original)
                 report.combustible_manejando,
                 report.combustible_ralenti,
                 report.def_usado,
@@ -211,14 +286,20 @@
                 const cell = row.insertCell();
                 let value = text || 'N/D';
                 
+                // Poner clase base primero
+                cell.className = 'px-4 py-3 whitespace-nowrap text-gray-700';
+
                 // Formateo especial para Factor de Carga
-                // El índice 23 corresponde a 'factor_carga' en el array 'columns'
                 if (index === 23 && value !== 'N/D' && !isNaN(parseFloat(value))) { 
                     value = `${value}%`;
                 }
+
+                // Poner fondo a las columnas KM y Combustible
+                if (index === 4 || index === 5) {
+                    cell.className = 'px-4 py-3 whitespace-nowrap text-gray-700 bg-orange-50 font-medium text-orange-900';
+                }
                 
                 cell.textContent = value;
-                cell.className = 'px-4 py-3 whitespace-nowrap text-gray-700';
             });
         }
 
@@ -228,16 +309,33 @@
                 // Añadir un parámetro 'cache buster' para evitar la caché del navegador
                 const response = await fetch(`fetch_reports.php?t=${new Date().getTime()}`);
                 if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor.');
+                    throw new Error('Error en la respuesta del servidor (fetch_reports).');
                 }
                 const reports = await response.json();
 
                 // Limpiar tabla
                 tableBody.innerHTML = ''; 
 
+                // Variables para KPIs
+                let totalKm = 0;
+                let totalFuel = 0;
+
                 if (reports.length > 0) {
-                    reports.forEach(addReportRow);
+                    reports.forEach(report => {
+                        // Sumar a los KPIs
+                        totalKm += parseFloat(report.km_recorrido) || 0;
+                        totalFuel += parseFloat(report.combustible_viaje) || 0;
+
+                        // Añadir fila
+                        addReportRow(report);
+                    });
+                    
                     reportCountEl.textContent = `Mostrando ${reports.length} reportes.`;
+
+                    // Mostrar KPIs formateados
+                    kpiTotalKm.textContent = totalKm.toLocaleString('es-MX', { maximumFractionDigits: 0 });
+                    kpiTotalFuel.textContent = totalFuel.toLocaleString('es-MX', { maximumFractionDigits: 2 }) + ' L';
+
                 } else {
                     tableBody.innerHTML = `
                         <tr>
@@ -247,9 +345,13 @@
                         </tr>
                     `;
                     reportCountEl.textContent = 'Mostrando 0 reportes.';
+                    
+                    // Resetear KPIs si no hay datos
+                    kpiTotalKm.textContent = '0';
+                    kpiTotalFuel.textContent = '0 L';
                 }
             } catch (error) {
-                console.error('Error al cargar reportes:', error);
+                console.error('Error al cargar reportes (Diesel):', error);
                 tableBody.innerHTML = `
                     <tr>
                         <td colspan="30" class="text-center p-6 text-red-500">
@@ -260,6 +362,84 @@
                 reportCountEl.textContent = 'Error al cargar reportes.';
             }
         }
+
+
+        // --- LÓGICA DE CARGA (REPORTE TABLETA) - ACTUALIZADA ---
+
+        const tabletTableBody = document.getElementById('tabletTableBody');
+        const tabletReportCountEl = document.getElementById('tablet-report-count');
+
+        // Función para añadir una fila a la tabla de tableta
+        function addTabletReportRow(report) {
+            const row = tabletTableBody.insertRow();
+            row.className = 'hover:bg-gray-50';
+            
+            // Mapeo de columnas con los NUEVOS nombres del PHP
+            const columns = [
+                report.id,
+                report.company_name, // CAMBIADO
+                report.unit_number,  // CAMBIADO
+                report.operator_name,// CAMBIADO
+                report.bitacora_number,
+                report.km_hubodometro,
+                report.km_inicio,
+                report.km_fin,
+                report.km_recorridos,
+                report.litros_diesel,
+                report.litros_auto,
+                report.litros_urea,
+                report.seals,
+                report.litros_totalizador,
+                report.ruta_foto,
+                report.timestamp, // Ya viene formateado desde PHP
+                report.photo_path
+            ];
+
+            columns.forEach(text => {
+                const cell = row.insertCell();
+                cell.textContent = text || 'N/D';
+                cell.className = 'px-4 py-3 whitespace-nowrap text-gray-700';
+            });
+        }
+
+        // Función para cargar los reportes de tableta desde la BD
+        async function fetchTabletReports() {
+            try {
+                const response = await fetch(`fetch_tablet_reports.php?t=${new Date().getTime()}`);
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor (fetch_tablet_reports).');
+                }
+                const reports = await response.json();
+
+                // Limpiar tabla
+                tabletTableBody.innerHTML = ''; 
+
+                if (reports.length > 0) {
+                    reports.forEach(addTabletReportRow);
+                    tabletReportCountEl.textContent = `Mostrando ${reports.length} reportes.`;
+                } else {
+                    tabletTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="17" class="text-center p-6 text-gray-500">
+                                No hay reportes de tableta.
+                            </td>
+                        </tr>
+                    `;
+                    tabletReportCountEl.textContent = 'Mostrando 0 reportes.';
+                }
+            } catch (error) {
+                console.error('Error al cargar reportes (Tableta):', error);
+                tabletTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="17" class="text-center p-6 text-red-500">
+                            Error al cargar los reportes. Revise la conexión y el archivo 'fetch_tablet_reports.php'.
+                        </td>
+                    </tr>
+                `;
+                tabletReportCountEl.textContent = 'Error al cargar reportes.';
+            }
+        }
+
 
         // --- LÓGICA DE SUBIDA DE ARCHIVOS ---
 
@@ -324,9 +504,10 @@
             uploadStatus.appendChild(p);
         }
 
-        // Carga inicial de datos
+        // Carga inicial de datos (MODIFICADA)
         document.addEventListener('DOMContentLoaded', () => {
-            fetchReports();
+            fetchReports(); // Cargar reportes de diesel
+            fetchTabletReports(); // Cargar reportes de tableta
         });
     </script>
 

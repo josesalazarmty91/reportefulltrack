@@ -6,6 +6,64 @@ header('Content-Type: application/json');
 
 $response = [];
 
+// --- INICIO DE NUEVA FUNCIÓN DE AYUDA ---
+/**
+ * Parsea una cadena de fecha/hora dado un formato de entrada específico.
+ * Devuelve un array con la fecha (formato m/d/Y para BD) y la hora (formato H:i:s).
+ *
+ * @param string $dateString La cadena de fecha/hora (ej. "13/11/2025 02:10:39 p. m.")
+ * @param string $inputFormat El formato PHP de la cadena (ej. 'd/m/Y h:i:s A')
+ * @return array ['date' => 'm/d/Y', 'time' => 'H:i:s']
+ */
+function parseAndFormatDateTime($dateString, $inputFormat) {
+    $date = 'N/D';
+    $time = 'N/D';
+
+    // 1. Limpiar espacios y normalizar AM/PM
+    $dateString = trim($dateString);
+    $dateString = preg_replace('/\s+/', ' ', $dateString);
+    // Reemplazar 'p. m.' y 'a. m.' (con puntos) por 'PM' y 'AM'
+    $dateStringAmPm = str_replace(['a. m.', 'p. m.'], ['AM', 'PM'], $dateString);
+
+    // 2. Determinar qué cadena usar (la que tiene AM/PM o la normal)
+    // Si el formato de entrada espera 'A' (AM/PM), usamos la cadena normalizada.
+    $stringToParse = (strpos($inputFormat, 'A') !== false) ? $dateStringAmPm : $dateString;
+
+    // 3. Crear el objeto DateTime desde el formato de ENTRADA específico
+    $dateTime = DateTime::createFromFormat($inputFormat, $stringToParse);
+    
+    // 4. Si el parseo falló, intentar un formato alternativo (ej. 24h vs 12h)
+    // Esto da flexibilidad si un archivo Detroit usa AM/PM o un Cummins usa 24h
+    if ($dateTime === false) {
+        $altFormat = '';
+        if (strpos($inputFormat, 'h:i:s A') !== false) {
+            // Era 12h, intentar 24h
+            $altFormat = str_replace('h:i:s A', 'H:i:s', $inputFormat);
+            $stringToParse = $dateString; // Usar la cadena original
+        } elseif (strpos($inputFormat, 'H:i:s') !== false) {
+            // Era 24h, intentar 12h
+            $altFormat = str_replace('H:i:s', 'h:i:s A', $inputFormat);
+            $stringToParse = $dateStringAmPm; // Usar la cadena AM/PM
+        }
+        
+        if ($altFormat) {
+            $dateTime = DateTime::createFromFormat($altFormat, $stringToParse);
+        }
+    }
+
+    if ($dateTime) {
+        // 5. ÉXITO: Formatear para la BD
+        // Guardar SIEMPRE en formato Americano (m/d/Y)
+        // Esto es CRÍTICO para que fetch_reports.php funcione.
+        $date = $dateTime->format('m/d/Y'); 
+        $time = $dateTime->format('H:i:s'); // Guardar siempre en 24h
+    }
+    
+    return ['date' => $date, 'time' => $time];
+}
+// --- FIN DE NUEVA FUNCIÓN DE AYUDA ---
+
+
 try {
     // --- 1. CONFIGURACIÓN Y CONEXIÓN A BD ---
 
@@ -58,7 +116,7 @@ try {
 
     $reportData = [];
     $unitNumber = 'N/D';
-    $rawDateStr = 'N/D';
+    // $rawDateStr se definirá dentro de los 'if'
 
     // Mapa de nombres de reporte (del TXT) a nombres de columnas en la BD
     $dbColumnMap = [
@@ -122,7 +180,12 @@ try {
     if (isset($xml->TripInfoParameters)) {
         // --- TIPO CUMMINS ---
         $unitNumber = (string) $xml->DeviceInfo['UnitNumber'];
-        $rawDateStr = (string) $xml->DeviceInfo['ReportDate'];
+        $rawDateStr = (string) $xml->DeviceInfo['ReportDate']; // ej. "13/11/2025 02:10:39 p. m."
+
+        // Parsear fecha de CUMMINS (d/m/Y h:i:s A)
+        $parsedDateTime = parseAndFormatDateTime($rawDateStr, 'd/m/Y h:i:s A');
+        $reportData['report_date'] = $parsedDateTime['date'];
+        $reportData['report_time'] = $parsedDateTime['time'];
 
         foreach ($mapping as $nombreReporte => $tags) {
             $tagName = $tags["Cummins"];
@@ -146,7 +209,12 @@ try {
     } elseif (isset($xml->DataFile->TripActivity)) {
         // --- TIPO DETROIT ---
         $unitNumber = (string) $xml->DataFile['VehicleID'];
-        $rawDateStr = (string) $xml->DataFile['PC_Date'];
+        $rawDateStr = (string) $xml->DataFile['PC_Date']; // ej. "10/28/2025 13:08:24"
+
+        // Parsear fecha de DETROIT (m/d/Y H:i:s)
+        $parsedDateTime = parseAndFormatDateTime($rawDateStr, 'm/d/Y H:i:s');
+        $reportData['report_date'] = $parsedDateTime['date'];
+        $reportData['report_time'] = $parsedDateTime['time'];
 
         foreach ($mapping as $nombreReporte => $tags) {
             $tagName = $tags["Detroit"];
@@ -183,66 +251,12 @@ try {
         throw new Exception('Formato de XML no reconocido.');
     }
 
-    // --- 4. LIMPIEZA DE DATOS (UNIDAD Y FECHA/HORA) ---
+    // --- 4. LIMPIEZA DE DATOS (UNIDAD) ---
 
     // Limpiar número de unidad
     $cleanedUnitNumber = str_replace('#', '', $unitNumber);
     
-    // Función para parsear fecha y hora (Detroit y Cummins)
-    function parseDateTime($dateString) {
-        $date = 'N/D';
-        $time = 'N/D';
-        
-        // Limpiar espacios extraños
-        $dateString = trim($dateString);
-        // Reemplazar múltiples espacios por uno solo
-        $dateString = preg_replace('/\s+/', ' ', $dateString);
-        
-        // Reemplazar 'a. m.' y 'p. m.' por 'AM' y 'PM' para parseo
-        $dateStringAmPm = str_replace(['a. m.', 'p. m.'], ['AM', 'PM'], $dateString);
-
-        // --- INICIO DE CORRECCIÓN ---
-        // Definir los formatos a intentar, priorizando el formato original
-        $formatsToTry = [
-            // Formatos m/d/Y (Americano - Original)
-            'm/d/Y H:i:s',     // Detroit (24h)
-            'm/d/Y h:i:s A',   // Cummins (12h)
-            
-            // Formatos d/m/Y (Latino/Europeo - Nuevo)
-            'd/m/Y H:i:s',     // Detroit (24h)
-            'd/m/Y h:i:s A'    // Cummins (12h)
-        ];
-
-        $dateTime = false; // Variable para guardar el objeto DateTime
-
-        foreach ($formatsToTry as $format) {
-            // Usar la cadena con AM/PM si el formato lo requiere
-            $stringToParse = (strpos($format, 'A') !== false) ? $dateStringAmPm : $dateString;
-            
-            $dateTime = DateTime::createFromFormat($format, $stringToParse);
-            
-            if ($dateTime) {
-                // Si el formato funcionó, salir del bucle
-                break;
-            }
-        }
-
-        // Si $dateTime no es falso, encontramos una fecha válida
-        if ($dateTime) {
-            // Éxito: Guardar SIEMPRE en formato Americano (m/d/Y)
-            // Esto asegura que fetch_reports.php pueda leerlo.
-            $date = $dateTime->format('m/d/Y'); 
-            $time = $dateTime->format('H:i:s'); // Convertir siempre a 24h
-        }
-        // Si $dateTime sigue siendo false, la función devolverá los valores por defecto 'N/D'
-        // --- FIN DE CORRECCIÓN ---
-        
-        return ['date' => $date, 'time' => $time];
-    }
-    
-    $parsedDateTime = parseDateTime($rawDateStr);
-    $reportData['report_date'] = $parsedDateTime['date'];
-    $reportData['report_time'] = $parsedDateTime['time'];
+    // --- (La lógica de parseDateTime anterior fue movida hacia arriba) ---
 
     // --- 5. INSERCIÓN EN BASE DE DATOS ---
 
