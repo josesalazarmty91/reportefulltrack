@@ -197,29 +197,45 @@ try {
         $dateString = trim($dateString);
         // Reemplazar múltiples espacios por uno solo
         $dateString = preg_replace('/\s+/', ' ', $dateString);
-
-        // Formato Detroit: 10/27/2025 10:51:03
-        // Formato Cummins: 06/11/2025 11:47:32 a. m.
         
-        // Intentar parsear formato Detroit primero
-        $dateTime = DateTime::createFromFormat('m/d/Y H:i:s', $dateString);
-        
-        if ($dateTime) {
-            // Es formato Detroit (24h)
-            $date = $dateTime->format('m/d/Y'); // Guardar en formato Americano
-            $time = $dateTime->format('H:i:s');
-        } else {
-            // Intentar parsear formato Cummins (con a. m./p. m.)
-            // Reemplazar 'a. m.' y 'p. m.' por 'AM' y 'PM'
-            $dateStringAmPm = str_replace(['a. m.', 'p. m.'], ['AM', 'PM'], $dateString);
-            $dateTimeAmPm = DateTime::createFromFormat('m/d/Y h:i:s A', $dateStringAmPm);
+        // Reemplazar 'a. m.' y 'p. m.' por 'AM' y 'PM' para parseo
+        $dateStringAmPm = str_replace(['a. m.', 'p. m.'], ['AM', 'PM'], $dateString);
 
-            if ($dateTimeAmPm) {
-                // Es formato Cummins
-                $date = $dateTimeAmPm->format('m/d/Y'); // Guardar en formato Americano
-                $time = $dateTimeAmPm->format('H:i:s'); // Ya está en 24h
+        // --- INICIO DE CORRECCIÓN ---
+        // Definir los formatos a intentar, priorizando el formato original
+        $formatsToTry = [
+            // Formatos m/d/Y (Americano - Original)
+            'm/d/Y H:i:s',     // Detroit (24h)
+            'm/d/Y h:i:s A',   // Cummins (12h)
+            
+            // Formatos d/m/Y (Latino/Europeo - Nuevo)
+            'd/m/Y H:i:s',     // Detroit (24h)
+            'd/m/Y h:i:s A'    // Cummins (12h)
+        ];
+
+        $dateTime = false; // Variable para guardar el objeto DateTime
+
+        foreach ($formatsToTry as $format) {
+            // Usar la cadena con AM/PM si el formato lo requiere
+            $stringToParse = (strpos($format, 'A') !== false) ? $dateStringAmPm : $dateString;
+            
+            $dateTime = DateTime::createFromFormat($format, $stringToParse);
+            
+            if ($dateTime) {
+                // Si el formato funcionó, salir del bucle
+                break;
             }
         }
+
+        // Si $dateTime no es falso, encontramos una fecha válida
+        if ($dateTime) {
+            // Éxito: Guardar SIEMPRE en formato Americano (m/d/Y)
+            // Esto asegura que fetch_reports.php pueda leerlo.
+            $date = $dateTime->format('m/d/Y'); 
+            $time = $dateTime->format('H:i:s'); // Convertir siempre a 24h
+        }
+        // Si $dateTime sigue siendo false, la función devolverá los valores por defecto 'N/D'
+        // --- FIN DE CORRECCIÓN ---
         
         return ['date' => $date, 'time' => $time];
     }
