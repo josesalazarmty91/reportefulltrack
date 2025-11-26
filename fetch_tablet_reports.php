@@ -38,27 +38,41 @@ try {
     // Establecer charset
     $conn->set_charset('utf8mb4');
 
-    // 4. CONSULTA SQL ACTUALIZADA CON JOINS
-    // (Formateamos el timestamp a un formato legible)
-    $sql = "
+    // --- LÓGICA DE FILTROS (MODIFICADA) ---
+    $month = $_GET['month'] ?? null; // ej. '2025-11'
+    $unit = $_GET['unit'] ?? null;
+
+    $whereClauses = [];
+
+    // El input de fecha HTML envía 'YYYY-MM'.
+    // El campo 'timestamp' es DATETIME.
+    // Usamos DATE_FORMAT para formatearlo como 'YYYY-MM' y poder comparar.
+    
+    if (!empty($month)) {
+        $whereClauses[] = "DATE_FORMAT(r.timestamp, '%Y-%m') = '{$conn->real_escape_string($month)}'";
+    }
+    if (!empty($unit)) {
+        // Filtramos por la columna 'unit_number' de la tabla 'units' (alias 'u')
+        $whereClauses[] = "u.unit_number LIKE '%{$conn->real_escape_string($unit)}%'";
+    }
+    // --- FIN LÓGICA DE FILTROS ---
+
+
+    // 4. CONSULTA SQL ACTUALIZADA CON JOINS Y CAMPOS REQUERIDOS
+    $sqlBase = "
         SELECT 
             r.id,
             IFNULL(c.name, 'N/D') as company_name,
             IFNULL(u.unit_number, 'N/D') as unit_number,
+            DATE_FORMAT(r.timestamp, '%d/%m/%Y %H:%i:%s') as timestamp,
             IFNULL(o.name, 'N/D') as operator_name,
             r.bitacora_number,
-            r.km_hubodometro,
             r.km_inicio,
             r.km_fin,
             r.km_recorridos,
             r.litros_diesel,
-            r.litros_auto,
             r.litros_urea,
-            r.seals,
-            r.litros_totalizador,
-            r.ruta_foto,
-            DATE_FORMAT(r.timestamp, '%d/%m/%Y %H:%i:%s') as timestamp,
-            r.photo_path
+            r.litros_totalizador
         FROM 
             registros_entrada as r
         LEFT JOIN 
@@ -67,9 +81,17 @@ try {
             units as u ON r.unit_id = u.id
         LEFT JOIN 
             operators as o ON r.operator_id = o.id
-        ORDER BY 
-            r.id DESC
     ";
+    
+    $sqlOrder = " ORDER BY r.id DESC ";
+
+    // Construir la consulta final con los filtros
+    if (!empty($whereClauses)) {
+        $sql = $sqlBase . " WHERE " . implode(" AND ", $whereClauses) . $sqlOrder;
+    } else {
+        $sql = $sqlBase . $sqlOrder;
+    }
+
 
     $result = $conn->query($sql);
 

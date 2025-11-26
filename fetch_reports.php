@@ -1,8 +1,4 @@
 <?php
-// Activar el reporte de errores para depuración (solo al inicio)
-// ini_set('display_errors', 1);
-// error_reporting(E_ALL);
-
 // Desactivar errores en la salida final y establecer cabecera JSON
 ini_set('display_errors', 0);
 header('Content-Type: application/json');
@@ -11,7 +7,6 @@ $response = [];
 
 try {
     // Usar __DIR__ para asegurar que la ruta al config es correcta
-    // Asume que db_config.php está EN LA MISMA CARPETA que este archivo.
     $configFile = __DIR__ . '/db_config.php';
 
     if (!file_exists($configFile) || !is_readable($configFile)) {
@@ -25,7 +20,7 @@ try {
         throw new Exception("Las variables de configuración de la base de datos no están definidas en db_config.php.", 2);
     }
 
-    // Crear conexión
+    // Crear conexión (a la BD principal, 'grupoam6_repfull')
     $conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
 
     // Verificar conexión
@@ -33,13 +28,53 @@ try {
         throw new Exception("Error de conexión a la BD: " . $conn->connect_error, 3);
     }
 
-    // Establecer charset
     $conn->set_charset('utf8mb4');
 
-    // Consulta SQL para obtener los reportes
-    // *** CORRECCIÓN DE FECHA AÑADIDA AQUÍ ***
-    // 1. STR_TO_DATE convierte tu texto (ej. '10/27/2025') a una fecha real de MySQL.
-    // 2. DATE_FORMAT le da el formato de salida (ej. '27/10/2025').
+    // --- LÓGICA DE FILTROS (MODIFICADA) ---
+    $month = $_GET['month'] ?? null; // ej. '2025-11'
+    $unit = $_GET['unit'] ?? null;
+
+    $whereClauses = [];
+
+    // El input de fecha HTML envía 'YYYY-MM'.
+    // La BD tiene el formato 'm/d/Y' (VARCHAR).
+    // Usamos STR_TO_DATE para convertir la BD a una fecha real de MySQL
+    // y DATE_FORMAT para formatearla como 'YYYY-MM' y poder comparar.
+    
+    if (!empty($month)) {
+        $whereClauses[] = "DATE_FORMAT(STR_TO_DATE(report_date, '%m/%d/%Y'), '%Y-%m') = '{$conn->real_escape_string($month)}'";
+    }
+    if (!empty($unit)) {
+        $whereClauses[] = "unit_number LIKE '%{$conn->real_escape_string($unit)}%'";
+    }
+
+    // --- LÓGICA DE ORDENAMIENTO (NUEVA) ---
+    $sortBy = $_GET['sort_by'] ?? 'id'; // Default: id
+    $sortDir = $_GET['sort_dir'] ?? 'DESC'; // Default: DESC
+
+    // Sanitizar sortDir para evitar SQL injection (solo permitir ASC o DESC)
+    $sortDir = (strtoupper($sortDir) === 'DESC') ? 'DESC' : 'ASC';
+
+    // Construir la cláusula ORDER BY
+    $orderByClause = " ORDER BY id $sortDir"; // Orden por defecto
+    
+    if ($sortBy === 'date') {
+        // Ordenar por fecha (convirtiendo el VARCHAR a fecha)
+        // Usamos CASE para poner los 'N/D' o fechas malas al final
+        $orderByClause = " 
+            ORDER BY 
+                CASE 
+                    WHEN STR_TO_DATE(report_date, '%m/%d/%Y') IS NULL THEN 1 
+                    ELSE 0 
+                END, 
+                STR_TO_DATE(report_date, '%m/%d/%Y') $sortDir, 
+                report_time $sortDir
+        ";
+    }
+    // --- FIN LÓGICA DE ORDENAMIENTO ---
+
+
+    // Consulta SQL base para obtener los reportes
     $sql = "
         SELECT 
             id,
@@ -80,9 +115,16 @@ try {
             combustible_pto
         FROM 
             trip_reports
-        ORDER BY 
-            id ASC
     ";
+
+    // Añadir los filtros a la consulta si existen
+    if (!empty($whereClauses)) {
+        $sql .= " WHERE " . implode(" AND ", $whereClauses);
+    }
+
+    // CAMBIO: Usar la nueva cláusula de ordenamiento
+    $sql .= $orderByClause;
+
 
     $result = $conn->query($sql);
 

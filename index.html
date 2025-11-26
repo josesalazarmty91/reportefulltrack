@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-R">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fulltrack - Reportes</title>
     <!-- Cargar Tailwind CSS -->
@@ -33,9 +33,6 @@
         <p class="text-blue-100 mt-1">Sistema de consolidación de consumo de diesel de GRUPO AMALGAMA</p>
     </header>
 
-    <!-- 
-      CAMBIO: Clases 'max-w-7xl' y 'mx-auto' quitadas para que ocupe todo el ancho.
-    -->
     <main class="p-4 md:p-8">
         
         <!-- Contenedor de Pestañas -->
@@ -43,10 +40,13 @@
             <!-- Navegación de Pestañas (MODIFICADA) -->
             <div class="border-b border-gray-300">
                 <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                    <button id="tab-report" onclick="switchTab('report')" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-blue-600 border-blue-600">
+                    <!-- NUEVA PESTAÑA CONSOLIDADO (ACTIVA POR DEFECTO) -->
+                    <button id="tab-consolidated" onclick="switchTab('consolidated')" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-blue-600 border-blue-600">
+                        Consolidado
+                    </button>
+                    <button id="tab-report" onclick="switchTab('report')" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">
                         Reporte de Diesel
                     </button>
-                    <!-- NUEVA PESTAÑA -->
                     <button id="tab-tablet" onclick="switchTab('tablet')" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">
                         Reporte Tableta
                     </button>
@@ -56,11 +56,131 @@
                 </nav>
             </div>
 
-            <!-- Panel de Reporte (Activo por defecto) -->
-            <div id="panel-report" class="mt-6">
+            <!-- NUEVO PANEL CONSOLIDADO (ACTIVO POR DEFECTO) -->
+            <div id="panel-consolidated" class="mt-6">
                 <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">Reporte de Viajes Cargados</h2>
-                    <p id="report-count" class="text-sm text-gray-600 mb-4">Cargando reportes...</p>
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-4">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-2 md:mb-0">Reporte Consolidado</h2>
+                        <p id="consolidated-report-count" class="text-sm text-gray-600">Cargando reportes...</p>
+                    </div>
+
+                    <!-- FILTROS (NUEVOS) -->
+                    <div class="flex flex-wrap gap-4 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div>
+                            <label for="filter-month-consolidated" class="block text-sm font-medium text-gray-700">Mes:</label>
+                            <input type="month" id="filter-month-consolidated" class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div>
+                            <label for="filter-unit-consolidated" class="block text-sm font-medium text-gray-700">Unidad:</label>
+                            <input type="text" id="filter-unit-consolidated" placeholder="Buscar por unidad..." class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <button id="btn-filter-consolidated" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition duration-300">
+                                Filtrar
+                            </button>
+                            <button id="btn-clear-consolidated" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition duration-300">
+                                Limpiar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenedor de la tabla con scroll horizontal -->
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <!-- THEAD GIGANTE -->
+                            <thead class="bg-gray-100"> 
+                                <tr>
+                                    <!-- Columna 1: Conciliado -->
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-gray-800">Conciliado</th>
+                                    
+                                    <!-- Columnas de Reporte Diesel (Naranja) -->
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">ID Diesel</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Unidad (Diesel)</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Fecha (Diesel)</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Hora (Diesel)</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-200">KM Recorrido</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-200">Combustible del viaje</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Distancia conducida</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Distancia en top gear</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Distancia en cambio bajo</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Combustible manejando</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Combustible en ralentí</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">DEF usado</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Tiempo del viaje</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Tiempo manejando</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Tiempo en ralentí</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Tiempo en top gear</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Tiempo en crucero</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Tiempo en exceso de velocidad</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Velocidad máxima</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">RPM máxima</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Velocidad promedio</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Rendimiento del viaje</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Rendimiento manejando</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Factor de carga</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Eventos de exceso de velocidad</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Eventos de frenado</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Tiempo en neutro/coasting</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Tiempo en PTO</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Combustible PTO</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 bg-orange-100">Archivo</th>
+                                    
+                                    <!-- Columnas de Reporte Tableta (Azul) -->
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">ID Tableta</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">Compañía</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">Unidad (Tableta)</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">Fecha (Tableta)</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">Operador</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">Bitácora</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">KM Inicio</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">KM Fin</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">KM Recorridos (T)</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">Litros Diesel</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">Litros Urea</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800 bg-blue-100">Totalizador</th>
+                                </tr>
+                            </thead>
+                            <tbody id="consolidatedTableBody" class="divide-y divide-gray-200 bg-white">
+                                <!-- Fila de carga (COLSPAN MODIFICADO) -->
+                                <tr>
+                                    <td colspan="43" class="text-center p-6 text-gray-500">
+                                        Cargando datos...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Reporte (AHORA OCULTO) -->
+            <div id="panel-report" class="hidden mt-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-4">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-2 md:mb-0">Reporte de Viajes Cargados</h2>
+                        <p id="report-count" class="text-sm text-gray-600">Cargando reportes...</p>
+                    </div>
+
+                    <!-- FILTROS (MODIFICADOS) -->
+                    <div class="flex flex-wrap gap-4 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div>
+                            <label for="filter-month-report" class="block text-sm font-medium text-gray-700">Mes:</label>
+                            <input type="month" id="filter-month-report" class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div>
+                            <label for="filter-unit-report" class="block text-sm font-medium text-gray-700">Unidad:</label>
+                            <input type="text" id="filter-unit-report" placeholder="Buscar por unidad..." class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <button id="btn-filter-report" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition duration-300">
+                                Filtrar
+                            </button>
+                            <button id="btn-clear-report" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition duration-300">
+                                Limpiar
+                            </button>
+                        </div>
+                    </div>
                     
                     <!-- KPIs -->
                     <div class="flex flex-wrap gap-4 mb-4">
@@ -83,7 +203,12 @@
                                 <tr>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">ID</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Número de Unidad</th>
-                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Fecha</th>
+                                    
+                                    <!-- CAMBIO: Añadido ID, clases de cursor y span para la flecha -->
+                                    <th id="th-fecha-report" class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800 cursor-pointer hover:bg-orange-200 transition-colors">
+                                        Fecha <span id="sort-arrow-report"></span>
+                                    </th>
+                                    
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-orange-800">Hora</th>
                                     
                                     <!-- COLUMNAS AGRUPADAS Y CON FONDO -->
@@ -129,40 +254,58 @@
                 </div>
             </div>
 
-            <!-- NUEVO PANEL DE TABLETA (Títulos actualizados) -->
+            <!-- PANEL DE TABLETA (AHORA OCULTO) -->
             <div id="panel-tablet" class="hidden mt-6">
                 <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">Reporte de Carga (Tableta)</h2>
-                    <p id="tablet-report-count" class="text-sm text-gray-600 mb-4">Cargando reportes de tableta...</p>
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-4">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-2 md:mb-0">Reporte de Carga (Tableta)</h2>
+                        <p id="tablet-report-count" class="text-sm text-gray-600">Cargando reportes de tableta...</p>
+                    </div>
+
+                    <!-- FILTROS (NUEVOS) -->
+                    <div class="flex flex-wrap gap-4 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div>
+                            <label for="filter-month-tablet" class="block text-sm font-medium text-gray-700">Mes:</label>
+                            <input type="month" id="filter-month-tablet" class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div>
+                            <label for="filter-unit-tablet" class="block text-sm font-medium text-gray-700">Unidad:</label>
+                            <input type="text" id="filter-unit-tablet" placeholder="Buscar por unidad..." class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <button id="btn-filter-tablet" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition duration-300">
+                                Filtrar
+                            </button>
+                            <button id="btn-clear-tablet" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition duration-300">
+                                Limpiar
+                            </button>
+                        </div>
+                    </div>
                     
                     <!-- Contenedor de la tabla con scroll horizontal -->
                     <div class="overflow-x-auto rounded-lg border border-gray-200">
                         <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-blue-100"> <!-- Cabecera con otro color -->
+                            <!-- THEAD MODIFICADO -->
+                            <thead class="bg-blue-100"> 
                                 <tr>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">ID</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Compañía</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Unidad</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Fecha</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Operador</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Bitácora</th>
-                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Hubodómetro</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">KM Inicio</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">KM Fin</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">KM Recorridos</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Litros Diesel</th>
-                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Litros Auto</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Litros Urea</th>
-                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Sellos</th>
                                     <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Totalizador</th>
-                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Ruta Foto</th>
-                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Timestamp</th>
-                                    <th class="whitespace-nowrap px-4 py-3 text-left font-semibold text-blue-800">Ruta Foto (2)</th>
                                 </tr>
                             </thead>
                             <tbody id="tabletTableBody" class="divide-y divide-gray-200 bg-white">
-                                <!-- Fila de carga -->
+                                <!-- Fila de carga (COLSPAN MODIFICADO) -->
                                 <tr>
-                                    <td colspan="17" class="text-center p-6 text-gray-500">
+                                    <td colspan="12" class="text-center p-6 text-gray-500">
                                         Cargando datos...
                                     </td>
                                 </tr>
@@ -207,13 +350,15 @@
     <script>
         // --- LÓGICA DE PESTAÑAS (MODIFICADA) ---
         const tabButtons = {
+            consolidated: document.getElementById('tab-consolidated'), // NUEVO
             report: document.getElementById('tab-report'),
-            tablet: document.getElementById('tab-tablet'), // NUEVO
+            tablet: document.getElementById('tab-tablet'),
             upload: document.getElementById('tab-upload')
         };
         const tabPanels = {
+            consolidated: document.getElementById('panel-consolidated'), // NUEVO
             report: document.getElementById('panel-report'),
-            tablet: document.getElementById('panel-tablet'), // NUEVO
+            tablet: document.getElementById('panel-tablet'),
             upload: document.getElementById('panel-upload')
         };
 
@@ -234,167 +379,115 @@
         }
 
         // --- LÓGICA DE CARGA DE DATOS (REPORTE DIESEL) ---
-
+// ... (Toda la lógica de Reporte Diesel se queda igual) ...
         const tableBody = document.getElementById('reportTableBody');
         const reportCountEl = document.getElementById('report-count');
-        
-        // Elementos de KPI
         const kpiTotalKm = document.getElementById('kpi-total-km');
         const kpiTotalFuel = document.getElementById('kpi-total-fuel');
+        const filterMonthReport = document.getElementById('filter-month-report');
+        const filterUnitReport = document.getElementById('filter-unit-report');
+        const btnFilterReport = document.getElementById('btn-filter-report');
+        const btnClearReport = document.getElementById('btn-clear-report');
+        const thFechaReport = document.getElementById('th-fecha-report');
+        const sortArrowReport = document.getElementById('sort-arrow-report');
+        let reportDateSort = 'DESC'; 
 
-        // Función para añadir una fila a la tabla de reportes
+        function updateSortArrow() {
+            if (reportDateSort === 'ASC') {
+                sortArrowReport.innerHTML = ' &uarr;';
+            } else if (reportDateSort === 'DESC') {
+                sortArrowReport.innerHTML = ' &darr;';
+            } else {
+                sortArrowReport.innerHTML = '';
+            }
+        }
+
         function addReportRow(report) {
             const row = tableBody.insertRow();
             row.className = 'hover:bg-gray-50';
-            
-            // Mapeo de columnas en el orden exacto de la tabla
             const columns = [
-                report.id,
-                report.unit_number,
-                report.report_date, // Columna de fecha
-                report.report_time, // Columna de hora
-                report.km_recorrido, // Columna 4
-                report.combustible_viaje, // Columna 5 (MOVIDA)
-                report.distancia_conducida,
-                report.distancia_top_gear,
-                report.distancia_cambio_bajo,
-                // report.combustible_viaje, // (Quitada de su posición original)
-                report.combustible_manejando,
-                report.combustible_ralenti,
-                report.def_usado,
-                report.tiempo_viaje,
-                report.tiempo_manejando,
-                report.tiempo_ralenti,
-                report.tiempo_top_gear,
-                report.tiempo_crucero,
-                report.tiempo_exceso_velocidad,
-                report.velocidad_maxima,
-                report.rpm_maxima,
-                report.velocidad_promedio,
-                report.rendimiento_viaje,
-                report.rendimiento_manejando,
-                report.factor_carga,
-                report.eventos_exceso_velocidad,
-                report.eventos_frenado,
-                report.tiempo_neutro_coasting,
-                report.tiempo_pto,
-                report.combustible_pto,
-                report.file_name
+                report.id, report.unit_number, report.report_date, report.report_time,
+                report.km_recorrido, report.combustible_viaje, report.distancia_conducida,
+                report.distancia_top_gear, report.distancia_cambio_bajo, report.combustible_manejando,
+                report.combustible_ralenti, report.def_usado, report.tiempo_viaje, report.tiempo_manejando,
+                report.tiempo_ralenti, report.tiempo_top_gear, report.tiempo_crucero,
+                report.tiempo_exceso_velocidad, report.velocidad_maxima, report.rpm_maxima,
+                report.velocidad_promedio, report.rendimiento_viaje, report.rendimiento_manejando,
+                report.factor_carga, report.eventos_exceso_velocidad, report.eventos_frenado,
+                report.tiempo_neutro_coasting, report.tiempo_pto, report.combustible_pto, report.file_name
             ];
-
             columns.forEach((text, index) => {
                 const cell = row.insertCell();
                 let value = text || 'N/D';
-                
-                // Poner clase base primero
                 cell.className = 'px-4 py-3 whitespace-nowrap text-gray-700';
-
-                // Formateo especial para Factor de Carga
                 if (index === 23 && value !== 'N/D' && !isNaN(parseFloat(value))) { 
                     value = `${value}%`;
                 }
-
-                // Poner fondo a las columnas KM y Combustible
                 if (index === 4 || index === 5) {
                     cell.className = 'px-4 py-3 whitespace-nowrap text-gray-700 bg-orange-50 font-medium text-orange-900';
                 }
-                
                 cell.textContent = value;
             });
         }
 
-        // Función para cargar los reportes desde la BD
-        async function fetchReports() {
+        async function fetchReports(month = '', unit = '', sortDir = 'DESC') {
+            reportCountEl.textContent = 'Cargando reportes...';
+            tableBody.innerHTML = `<tr><td colspan="30" class="text-center p-6 text-gray-500">Cargando datos...</td></tr>`;
             try {
-                // Añadir un parámetro 'cache buster' para evitar la caché del navegador
-                const response = await fetch(`fetch_reports.php?t=${new Date().getTime()}`);
+                const queryParams = new URLSearchParams();
+                if (month) queryParams.append('month', month);
+                if (unit) queryParams.append('unit', unit);
+                queryParams.append('sort_by', 'date');
+                queryParams.append('sort_dir', sortDir);
+                queryParams.append('t', new Date().getTime());
+                const response = await fetch(`fetch_reports.php?${queryParams.toString()}`);
                 if (!response.ok) {
                     throw new Error('Error en la respuesta del servidor (fetch_reports).');
                 }
                 const reports = await response.json();
-
-                // Limpiar tabla
                 tableBody.innerHTML = ''; 
-
-                // Variables para KPIs
                 let totalKm = 0;
                 let totalFuel = 0;
-
                 if (reports.length > 0) {
                     reports.forEach(report => {
-                        // Sumar a los KPIs
                         totalKm += parseFloat(report.km_recorrido) || 0;
                         totalFuel += parseFloat(report.combustible_viaje) || 0;
-
-                        // Añadir fila
                         addReportRow(report);
                     });
-                    
                     reportCountEl.textContent = `Mostrando ${reports.length} reportes.`;
-
-                    // Mostrar KPIs formateados
                     kpiTotalKm.textContent = totalKm.toLocaleString('es-MX', { maximumFractionDigits: 0 });
                     kpiTotalFuel.textContent = totalFuel.toLocaleString('es-MX', { maximumFractionDigits: 2 }) + ' L';
-
                 } else {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="30" class="text-center p-6 text-gray-500">
-                                No hay reportes cargados. Comience subiendo un archivo.
-                            </td>
-                        </tr>
-                    `;
+                    tableBody.innerHTML = `<tr><td colspan="30" class="text-center p-6 text-gray-500">No se encontraron reportes con los filtros aplicados.</td></tr>`;
                     reportCountEl.textContent = 'Mostrando 0 reportes.';
-                    
-                    // Resetear KPIs si no hay datos
                     kpiTotalKm.textContent = '0';
                     kpiTotalFuel.textContent = '0 L';
                 }
             } catch (error) {
                 console.error('Error al cargar reportes (Diesel):', error);
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="30" class="text-center p-6 text-red-500">
-                            Error al cargar los reportes. Revise la conexión y el archivo 'fetch_reports.php'.
-                        </td>
-                    </tr>
-                `;
+                tableBody.innerHTML = `<tr><td colspan="30" class="text-center p-6 text-red-500">Error al cargar los reportes. Revise la conexión y el archivo 'fetch_reports.php'.</td></tr>`;
                 reportCountEl.textContent = 'Error al cargar reportes.';
             }
         }
 
 
-        // --- LÓGICA DE CARGA (REPORTE TABLETA) - ACTUALIZADA ---
-
+        // --- LÓGICA DE CARGA (REPORTE TABLETA) ---
+// ... (Toda la lógica de Reporte Tableta se queda igual) ...
         const tabletTableBody = document.getElementById('tabletTableBody');
         const tabletReportCountEl = document.getElementById('tablet-report-count');
+        const filterMonthTablet = document.getElementById('filter-month-tablet');
+        const filterUnitTablet = document.getElementById('filter-unit-tablet');
+        const btnFilterTablet = document.getElementById('btn-filter-tablet');
+        const btnClearTablet = document.getElementById('btn-clear-tablet');
 
-        // Función para añadir una fila a la tabla de tableta
         function addTabletReportRow(report) {
             const row = tabletTableBody.insertRow();
             row.className = 'hover:bg-gray-50';
-            
-            // Mapeo de columnas con los NUEVOS nombres del PHP
             const columns = [
-                report.id,
-                report.company_name, // CAMBIADO
-                report.unit_number,  // CAMBIADO
-                report.operator_name,// CAMBIADO
-                report.bitacora_number,
-                report.km_hubodometro,
-                report.km_inicio,
-                report.km_fin,
-                report.km_recorridos,
-                report.litros_diesel,
-                report.litros_auto,
-                report.litros_urea,
-                report.seals,
-                report.litros_totalizador,
-                report.ruta_foto,
-                report.timestamp, // Ya viene formateado desde PHP
-                report.photo_path
+                report.id, report.company_name, report.unit_number, report.timestamp,
+                report.operator_name, report.bitacora_number, report.km_inicio, report.km_fin,
+                report.km_recorridos, report.litros_diesel, report.litros_urea, report.litros_totalizador
             ];
-
             columns.forEach(text => {
                 const cell = row.insertCell();
                 cell.textContent = text || 'N/D';
@@ -402,79 +495,156 @@
             });
         }
 
-        // Función para cargar los reportes de tableta desde la BD
-        async function fetchTabletReports() {
+        async function fetchTabletReports(month = '', unit = '') {
+            tabletReportCountEl.textContent = 'Cargando reportes...';
+            tabletTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-6 text-gray-500">Cargando datos...</td></tr>`;
             try {
-                const response = await fetch(`fetch_tablet_reports.php?t=${new Date().getTime()}`);
+                const queryParams = new URLSearchParams();
+                if (month) queryParams.append('month', month);
+                if (unit) queryParams.append('unit', unit);
+                queryParams.append('t', new Date().getTime());
+                const response = await fetch(`fetch_tablet_reports.php?${queryParams.toString()}`);
                 if (!response.ok) {
                     throw new Error('Error en la respuesta del servidor (fetch_tablet_reports).');
                 }
                 const reports = await response.json();
-
-                // Limpiar tabla
                 tabletTableBody.innerHTML = ''; 
-
                 if (reports.length > 0) {
                     reports.forEach(addTabletReportRow);
                     tabletReportCountEl.textContent = `Mostrando ${reports.length} reportes.`;
                 } else {
-                    tabletTableBody.innerHTML = `
-                        <tr>
-                            <td colspan="17" class="text-center p-6 text-gray-500">
-                                No hay reportes de tableta.
-                            </td>
-                        </tr>
-                    `;
+                    tabletTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-6 text-gray-500">No se encontraron reportes con los filtros aplicados.</td></tr>`;
                     tabletReportCountEl.textContent = 'Mostrando 0 reportes.';
                 }
             } catch (error) {
                 console.error('Error al cargar reportes (Tableta):', error);
-                tabletTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="17" class="text-center p-6 text-red-500">
-                            Error al cargar los reportes. Revise la conexión y el archivo 'fetch_tablet_reports.php'.
-                        </td>
-                    </tr>
-                `;
+                tabletTableBody.innerHTML = `<tr><td colspan="12" class="text-center p-6 text-red-500">Error al cargar los reportes. Revise la conexión y el archivo 'fetch_tablet_reports.php'.</td></tr>`;
                 tabletReportCountEl.textContent = 'Error al cargar reportes.';
             }
         }
 
 
-        // --- LÓGICA DE SUBIDA DE ARCHIVOS ---
+        // --- NUEVA LÓGICA DE CARGA (REPORTE CONSOLIDADO) ---
 
+        const consolidatedTableBody = document.getElementById('consolidatedTableBody');
+        const consolidatedReportCountEl = document.getElementById('consolidated-report-count');
+        const filterMonthConsolidated = document.getElementById('filter-month-consolidated');
+        const filterUnitConsolidated = document.getElementById('filter-unit-consolidated');
+        const btnFilterConsolidated = document.getElementById('btn-filter-consolidated');
+        const btnClearConsolidated = document.getElementById('btn-clear-consolidated');
+
+        function addConsolidatedRow(report) {
+            const row = consolidatedTableBody.insertRow();
+            row.className = 'hover:bg-gray-50';
+
+            // 1. Columna de Conciliación
+            const cellConciliado = row.insertCell();
+            if (report.conciliado == 1) {
+                cellConciliado.innerHTML = '<span class="font-bold text-green-600">&#10004;</span>'; // Check
+                cellConciliado.className = 'px-4 py-3 whitespace-nowrap text-center';
+            } else {
+                cellConciliado.innerHTML = '<span class="font-bold text-red-600">&#10006;</span>'; // Cross
+                cellConciliado.className = 'px-4 py-3 whitespace-nowrap text-center';
+            }
+
+            // 2. Columnas de Reporte Diesel (t1)
+            const dieselColumns = [
+                report.t1_id, report.unit_number, report.t1_report_date, report.t1_report_time,
+                report.km_recorrido, report.combustible_viaje, report.distancia_conducida,
+                report.distancia_top_gear, report.distancia_cambio_bajo, report.combustible_manejando,
+                report.combustible_ralenti, report.def_usado, report.tiempo_viaje, report.tiempo_manejando,
+                report.tiempo_ralenti, report.tiempo_top_gear, report.tiempo_crucero,
+                report.tiempo_exceso_velocidad, report.velocidad_maxima, report.rpm_maxima,
+                report.velocidad_promedio, report.rendimiento_viaje, report.rendimiento_manejando,
+                report.factor_carga, report.eventos_exceso_velocidad, report.eventos_frenado,
+                report.tiempo_neutro_coasting, report.tiempo_pto, report.combustible_pto, report.file_name
+            ];
+            dieselColumns.forEach((text, index) => {
+                const cell = row.insertCell();
+                cell.textContent = text || 'N/D';
+                cell.className = 'px-4 py-3 whitespace-nowrap text-gray-700 bg-orange-50';
+                // Resaltar las celdas de KPI
+                if (index === 4 || index === 5) {
+                    cell.className = 'px-4 py-3 whitespace-nowrap text-gray-700 bg-orange-100 font-medium text-orange-900';
+                }
+            });
+
+            // 3. Columnas de Reporte Tableta (t2)
+            const tabletColumns = [
+                report.t2_id, report.t2_company_name, report.t2_unit_number, report.t2_timestamp,
+                report.t2_operator_name, report.bitacora_number, report.km_inicio, report.km_fin,
+                report.km_recorridos, report.litros_diesel, report.litros_urea, report.litros_totalizador
+            ];
+            tabletColumns.forEach(text => {
+                const cell = row.insertCell();
+                // Si no está conciliado, el PHP enviará N/D, pero por si acaso, verificamos con '||'
+                cell.textContent = text || 'N/D';
+                cell.className = 'px-4 py-3 whitespace-nowrap text-gray-700 bg-blue-50';
+            });
+        }
+
+        async function fetchConsolidatedReports(month = '', unit = '') {
+            consolidatedReportCountEl.textContent = 'Cargando reportes...';
+            consolidatedTableBody.innerHTML = `<tr><td colspan="43" class="text-center p-6 text-gray-500">Cargando datos...</td></tr>`;
+            try {
+                const queryParams = new URLSearchParams();
+                if (month) queryParams.append('month', month);
+                if (unit) queryParams.append('unit', unit);
+                queryParams.append('t', new Date().getTime());
+                const response = await fetch(`fetch_consolidated_reports.php?${queryParams.toString()}`);
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor (fetch_consolidated_reports).');
+                }
+                const reports = await response.json();
+                consolidatedTableBody.innerHTML = ''; 
+                if (reports.length > 0) {
+                    reports.forEach(addConsolidatedRow);
+                    consolidatedReportCountEl.textContent = `Mostrando ${reports.length} registros (basados en Reporte Diesel).`;
+                } else {
+                    consolidatedTableBody.innerHTML = `<tr><td colspan="43" class="text-center p-6 text-gray-500">No se encontraron reportes con los filtros aplicados.</td></tr>`;
+                    consolidatedReportCountEl.textContent = 'Mostrando 0 reportes.';
+                }
+            } catch (error) {
+                console.error('Error al cargar reportes (Consolidado):', error);
+                consolidatedTableBody.innerHTML = `<tr><td colspan="43" class="text-center p-6 text-red-500">Error al cargar los reportes. Revise la conexión y el archivo 'fetch_consolidated_reports.php'.</td></tr>`;
+                consolidatedReportCountEl.textContent = 'Error al cargar reportes.';
+            }
+        }
+
+        // --- LÓGICA DE SUBIDA DE ARCHIVOS ---
+// ... (La lógica de Subida se queda igual) ...
         const uploadForm = document.getElementById('uploadForm');
         const uploadStatus = document.getElementById('upload-status');
         const fileInput = document.getElementById('file-upload');
 
         uploadForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-
             const formData = new FormData(this);
             if (!fileInput.files.length) {
                 showStatus('Por favor, seleccione un archivo.', 'error');
                 return;
             }
-
             const submitButton = uploadForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.textContent = 'Procesando...';
             showStatus('Procesando archivo...', 'loading');
-
             try {
                 const response = await fetch('upload.php', {
                     method: 'POST',
                     body: formData
                 });
-
                 const result = await response.json();
-
                 if (result.status === 'success') {
                     showStatus(result.message, 'success');
-                    fileInput.value = ''; // Limpiar el input
-                    // Recargar los reportes y cambiar a la pestaña de reporte
-                    await fetchReports();
-                    switchTab('report');
+                    fileInput.value = ''; 
+                    // RECARGAR TODOS LOS PANELES y cambiar a la pestaña de CONSOLIDADO
+                    const currentMonth = filterMonthConsolidated.value;
+                    const currentUnit = filterUnitConsolidated.value;
+                    await fetchConsolidatedReports(currentMonth, currentUnit); // Recargar consolidado
+                    await fetchReports(currentMonth, currentUnit, reportDateSort); // Recargar diesel
+                    await fetchTabletReports(currentMonth, filterUnitTablet.value); // Recargar tableta
+                    
+                    switchTab('consolidated'); // Cambiar a la pestaña consolidada
                 } else {
                     showStatus(result.message, 'error');
                 }
@@ -482,18 +652,15 @@
                 console.error('Error al subir:', error);
                 showStatus('Error de conexión al subir el archivo.', 'error');
             } finally {
-                // Reactivar el botón
                 submitButton.disabled = false;
                 submitButton.textContent = 'Subir y Procesar Archivo';
             }
         });
 
-        // Función para mostrar mensajes de estado
         function showStatus(message, type = 'loading') {
             uploadStatus.innerHTML = '';
             const p = document.createElement('p');
             p.textContent = message;
-
             if (type === 'success') {
                 p.className = 'text-green-600';
             } else if (type === 'error') {
@@ -504,11 +671,71 @@
             uploadStatus.appendChild(p);
         }
 
-        // Carga inicial de datos (MODIFICADA)
+        // --- EVENT LISTENERS ---
+
+        // Carga inicial de datos (MODIFICADO PARA CARGAR MES ACTUAL Y CONSOLIDADO PRIMERO)
         document.addEventListener('DOMContentLoaded', () => {
-            fetchReports(); // Cargar reportes de diesel
-            fetchTabletReports(); // Cargar reportes de tableta
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const currentMonth = `${year}-${month}`; // Formato YYYY-MM
+
+            // Poner el mes actual en TODOS los inputs de filtro
+            filterMonthConsolidated.value = currentMonth;
+            filterMonthReport.value = currentMonth;
+            filterMonthTablet.value = currentMonth;
+
+            // Cargar TODOS los reportes usando el mes actual por defecto
+            // Empezar por el consolidado (que es la pestaña activa)
+            fetchConsolidatedReports(currentMonth, filterUnitConsolidated.value);
+            
+            // Cargar los otros en segundo plano
+            fetchReports(currentMonth, filterUnitReport.value, reportDateSort); 
+            updateSortArrow(); 
+            fetchTabletReports(currentMonth, filterUnitTablet.value);
         });
+
+        // Listeners para filtros de Reporte Consolidado (NUEVO)
+        btnFilterConsolidated.addEventListener('click', () => {
+            fetchConsolidatedReports(filterMonthConsolidated.value, filterUnitConsolidated.value);
+        });
+
+        btnClearConsolidated.addEventListener('click', () => {
+            filterMonthConsolidated.value = '';
+            filterUnitConsolidated.value = '';
+            fetchConsolidatedReports(); // Cargar todo
+        });
+
+        // Listeners para filtros de Reporte Diesel
+        btnFilterReport.addEventListener('click', () => {
+            fetchReports(filterMonthReport.value, filterUnitReport.value, reportDateSort);
+        });
+
+        btnClearReport.addEventListener('click', () => {
+            filterMonthReport.value = '';
+            filterUnitReport.value = '';
+            reportDateSort = 'DESC'; 
+            updateSortArrow(); 
+            fetchReports(filterMonthReport.value, filterUnitReport.value, reportDateSort);
+        });
+
+        thFechaReport.addEventListener('click', () => {
+            reportDateSort = (reportDateSort === 'ASC') ? 'DESC' : 'ASC';
+            updateSortArrow(); 
+            fetchReports(filterMonthReport.value, filterUnitReport.value, reportDateSort);
+        });
+
+        // Listeners para filtros de Reporte Tableta
+        btnFilterTablet.addEventListener('click', () => {
+            fetchTabletReports(filterMonthTablet.value, filterUnitTablet.value);
+        });
+
+        btnClearTablet.addEventListener('click', () => {
+            filterMonthTablet.value = '';
+            filterUnitTablet.value = '';
+            fetchTabletReports();
+        });
+
     </script>
 
 </body>
